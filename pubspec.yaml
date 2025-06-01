@@ -1,0 +1,26 @@
+name: tic_tac_toe
+description: A new Flutter project.
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.18.2 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  sizer: ^2.0.15
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.10.0
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/tic-tac-toe.png"
+
+flutter:
+  uses-material-design: true
