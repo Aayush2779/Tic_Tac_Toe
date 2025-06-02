@@ -34,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   int oScore = 0;
   int xScore = 0;
   int filledBoxes = 0;
+  bool gameOver = false;
   List<int> winningIndices = [];
 
   @override
@@ -174,13 +175,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _tapped(int index) {
+    if (displayElement[index] != '' || gameOver) return;
+
     setState(() {
-      if (displayElement[index] == '') {
-        displayElement[index] = oTurn ? 'O' : 'X';
-        filledBoxes++;
-        oTurn = !oTurn;
-        _checkWinner();
-      }
+      displayElement[index] = oTurn ? 'O' : 'X';
+      filledBoxes++;
+      oTurn = !oTurn;
+      _checkWinner();
     });
   }
 
@@ -204,6 +205,7 @@ class _HomePageState extends State<HomePage> {
       if (a == b && b == c && a != '') {
         setState(() {
           winningIndices = combo;
+          gameOver = true;
         });
         showWinSnackBar(a);
         return;
@@ -211,6 +213,9 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (filledBoxes == 9) {
+      setState(() {
+        gameOver = true;
+      });
       showDrawSnackBar();
     }
   }
@@ -257,7 +262,7 @@ class _HomePageState extends State<HomePage> {
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {
-                  _clearBoard();
+                  _performBoardClear();
                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
                 },
                 child: const Text("Play Again"),
@@ -303,7 +308,7 @@ class _HomePageState extends State<HomePage> {
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {
-                  _clearBoard();
+                  _performBoardClear();
                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
                 },
                 child: const Text("Play Again"),
@@ -316,20 +321,84 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _clearBoard() {
+    if (filledBoxes > 0 && !gameOver) {
+      _showClearBoardConfirmation();
+    } else {
+      _performBoardClear();
+    }
+  }
+
+  void _showClearBoardConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Start New Game?"),
+        content: const Text("You're currently in a game. Do you want to clear the board and start a new one?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _performBoardClear(showScoreDialog: true);
+            },
+            child: const Text("Clear Board"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _performBoardClear({bool showScoreDialog = false}) {
     setState(() {
       for (int i = 0; i < 9; i++) {
         displayElement[i] = '';
       }
       filledBoxes = 0;
       winningIndices.clear();
+      gameOver = false;
+    });
+
+    if (showScoreDialog) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        _askClearScore();
+      });
+    }
+  }
+
+  void _askClearScore() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Clear Score?"),
+        content: const Text("Do you also want to clear the score board?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("No"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _clearScoreOnly();
+            },
+            child: const Text("Yes, Clear Score"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _clearScoreOnly() {
+    setState(() {
+      xScore = 0;
+      oScore = 0;
     });
   }
 
   void _clearScoreBoard() {
-    setState(() {
-      xScore = 0;
-      oScore = 0;
-      _clearBoard();
-    });
+    _performBoardClear(showScoreDialog: true);
   }
 }
